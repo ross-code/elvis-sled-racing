@@ -1,0 +1,12 @@
+{
+  "name": "elvis-sled-racing",
+  "version": "1.0.0",
+  "description": "3D sled-dog racing adventure starring Elvis the white Siberian husky. Three.js, no build step.",
+  "type": "module",
+  "scripts": {
+    "dev": "python3 -m http.server 5173",
+    "start": "python3 -m http.server 5173"
+  },
+  "keywords": ["game", "threejs", "webgl", "sled-dog", "racing", "husky"],
+  "license": "MIT"
+}
