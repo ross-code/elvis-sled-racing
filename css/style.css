@@ -149,6 +149,13 @@ button { font-family: inherit; }
 .rh-toast.bad { color: #ffd0d0; border-color: #ff6b6b66; }
 .rh-toast.good { color: #c9ffe2; border-color: #45e08a66; }
 
+/* Mute toggle */
+.hud-mute { position: absolute; bottom: 18px; right: 18px; pointer-events: auto; width: 38px; height: 38px;
+  border-radius: 10px; background: rgba(14, 28, 54, .8); border: 1px solid var(--line); color: var(--ink);
+  font-size: 18px; line-height: 1; cursor: pointer; }
+.hud-mute:hover { filter: brightness(1.25); }
+@media (pointer: coarse) { .hud-mute { bottom: auto; top: 58px; right: 14px; } }
+
 /* Touch controls (mobile) */
 .touch-controls { position: absolute; bottom: 16px; right: 16px; display: none; gap: 10px; align-items: flex-end; pointer-events: auto; }
 .tbtn { pointer-events: auto; border: 1px solid var(--line); background: rgba(14,28,54,.82); color: var(--ink); border-radius: 14px;

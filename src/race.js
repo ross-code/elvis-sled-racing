@@ -9,6 +9,7 @@ import { createTrailPath } from './path.js';
 import { createTrack } from './track.js';
 import { createTeamRig } from './teamRig.js';
 import { createHud } from './hud.js';
+import { audio } from './audio.js';
 import { makeLog, makeRock, makeMoose, makeWolf, makeFlag, makeCabin } from './props.js';
 import { getLevel, THEMES } from './config.js';
 
@@ -190,12 +191,14 @@ export function createRaceScreen({ onFinish }) {
     };
     done = false; shake = 0;
 
+    audio.ensure();
     hud = createHud(level);
     document.body.appendChild(hud.root);
     hud.setWarn('Leg ' + level.id + ': ' + level.from + ' → ' + level.to + '   (◀ ▶ steer · hold ⇧/Space to mush)');
   };
 
   screen.exit = function () {
+    audio.silence();
     if (hud && hud.root.parentNode) hud.root.parentNode.removeChild(hud.root);
   };
 
@@ -264,7 +267,7 @@ export function createRaceScreen({ onFinish }) {
         if (st.travelled > river.dist) {
           river.done = true;
           if (Math.abs(st.x - river.safeX) <= river.safeHalf) hud.showToast('Clean crossing! 🧊', 'good');
-          else { st.cargo -= 0.16; st.speed *= 0.45; st.hits++; shake = 0.7; hud.showToast('Cold water! 🥶  Cargo soaked', 'bad'); }
+          else { st.cargo -= 0.16; st.speed *= 0.45; st.hits++; shake = 0.7; audio.thud(0.9); hud.showToast('Cold water! 🥶  Cargo soaked', 'bad'); }
         } else if (ahead < warnDistDyn + 18 && ahead < warnNear) {
           warnNear = ahead; warnMsg = '⚠ River crossing — aim between the green flags';
         }
@@ -316,10 +319,12 @@ export function createRaceScreen({ onFinish }) {
 
     track.update(st.travelled);
     world.update(dt, st.travelled, st.speed, cam.position);
+    audio.update(dt, clamp(st.speed / 24, 0, 1), st.speed > 0.6);
 
     function hit(type) {
       const dmg = { log: 0.1, rock: 0.08, moose: 0.16, wolf: 0.13 }[type] || 0.1;
       st.cargo -= dmg; st.speed *= 0.42; st.hits++; shake = 0.7;
+      audio.thud(type === 'moose' ? 1 : type === 'wolf' ? 0.8 : 0.7);
       hud.showToast(hitLabel(type), 'bad');
     }
   };

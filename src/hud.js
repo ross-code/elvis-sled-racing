@@ -1,6 +1,7 @@
 // In-race heads-up display, built as a DOM overlay over the canvas.
 import { el } from './util.js';
 import { bindTouch } from './input.js';
+import { audio } from './audio.js';
 
 export function createHud(level) {
   const fill = el('div', { class: 'rp-fill' });
@@ -26,6 +27,12 @@ export function createHud(level) {
   const btnB = el('button', { class: 'tbtn tbtn-b', text: 'BOOST' });
   const touch = el('div', { class: 'touch-controls' }, [btnL, btnB, btnR]);
 
+  const muteBtn = el('button', {
+    class: 'hud-mute', title: 'Mute (M)',
+    text: audio.muted ? '🔇' : '🔊',
+    onclick: () => { audio.toggleMute(); muteBtn.textContent = audio.muted ? '🔇' : '🔊'; },
+  });
+
   const root = el('div', { class: 'race-hud', id: 'raceHud' }, [
     el('div', { class: 'rh-top' }, [
       el('div', { class: 'rh-progress' }, [route, progress]),
@@ -41,6 +48,7 @@ export function createHud(level) {
       el('div', { class: 'bar-wrap' }, [el('div', { class: 'bar-lbl', text: '⚡ Stamina' }), el('div', { class: 'bar' }, [stamFill])]),
       el('div', { class: 'bar-wrap' }, [el('div', { class: 'bar-lbl', text: '✚ Serum' }), el('div', { class: 'bar' }, [cargoFill])]),
     ]),
+    muteBtn,
     touch,
   ]);
 
@@ -62,6 +70,8 @@ export function createHud(level) {
     stamFill.classList.toggle('low', s.stamina < 0.18);
     cargoFill.style.width = (s.cargo * 100).toFixed(0) + '%';
     cargoFill.classList.toggle('low', s.cargo < 0.34);
+    const icon = audio.muted ? '🔇' : '🔊'; // keep in sync with the M key
+    if (muteBtn.textContent !== icon) muteBtn.textContent = icon;
   }
   function setWarn(msg) {
     if (msg) { warn.textContent = msg; warn.classList.add('show'); }

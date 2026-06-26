@@ -47,8 +47,13 @@ the turns.
 |---|---|---|
 | Steer left / right | `←` `→` or `A` `D` | ◀ ▶ buttons |
 | Mush faster (boost) | `Shift` / `Space` / `W` / `↑` | BOOST button |
+| Mute / unmute | `M` | 🔊 button |
 
 Boosting is faster but burns **stamina**. Cruise to recover it.
+
+**Sound** is fully procedural (Web Audio, no audio files): a smooth runner-on-snow glide that
+brightens with speed, paw-fall patter synced to the team's gait, and crash thuds. It starts when
+you begin a run; mute with `M` or the 🔊 button (your choice is remembered).
 
 ### The five characteristics
 
