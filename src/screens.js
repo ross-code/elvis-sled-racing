@@ -58,7 +58,7 @@ function createShowcase(seed) {
 // ---- Title screen ----------------------------------------------------------
 export function createTitleScreen({ onStart }) {
   const show = createShowcase(7);
-  show.setDog({ coat: ELVIS.coat, eye: ELVIS.eye, wooly: true, scale: 1 });
+  show.setDog({ coat: ELVIS.coat, eye: ELVIS.eye, wooly: true, snowNose: true, lod: 'high', scale: 1 });
 
   const overlay = el('div', { class: 'overlay title-overlay hidden', id: 'titleScreen' }, [
     el('div', { class: 'title-inner' }, [
@@ -87,7 +87,7 @@ export function createDraftScreen({ onRace }) {
 
   let dogId = 0;
   const elvisMember = {
-    id: 'elvis', name: 'Elvis', isLead: true, locked: true, wooly: true,
+    id: 'elvis', name: 'Elvis', isLead: true, locked: true, wooly: true, snowNose: true,
     coat: ELVIS.coat, eye: ELVIS.eye, stats: { ...ELVIS.stats },
   };
   function recruit(coatId, name) {
@@ -121,7 +121,7 @@ export function createDraftScreen({ onRace }) {
 
   function previewSelected() {
     const m = team[sel];
-    show.setDog({ coat: m.coat, eye: m.eye, wooly: m.wooly, scale: m.isLead ? 1 : 0.96 });
+    show.setDog({ coat: m.coat, eye: m.eye, wooly: m.wooly, snowNose: m.snowNose, lod: 'high', scale: m.isLead ? 1 : 0.96 });
   }
 
   function renderRoster() {

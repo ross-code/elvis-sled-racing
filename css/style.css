@@ -126,6 +126,7 @@ button { font-family: inherit; }
 .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 11px; padding: 6px 12px; text-align: center; min-width: 78px; }
 .stat-lbl { font-size: 10px; letter-spacing: .12em; color: var(--ink-dim); }
 .stat-num { font-size: 18px; font-weight: 800; }
+.stat-num.hot { color: var(--ember); text-shadow: 0 0 12px rgba(255,122,61,.6); }
 
 .rh-bars { position: absolute; left: 18px; bottom: 18px; display: flex; flex-direction: column; gap: 8px; width: min(300px, 60vw); }
 .bar-wrap { }

@@ -107,6 +107,8 @@ export function createTeamRig(team) {
       coat: member.coat,
       eye: member.eye,
       wooly: !!member.wooly,
+      snowNose: !!member.snowNose,
+      lod: 'low', // racing dogs are small/fast — keep them light
       scale: member.isLead ? 0.92 : 0.86,
     });
     h.group.position.set(slot.x, 0, slot.z);

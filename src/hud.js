@@ -14,6 +14,7 @@ export function createHud(level) {
 
   const timeEl = el('div', { class: 'stat-num', text: '0.0s' });
   const speedEl = el('div', { class: 'stat-num', text: '0 mph' });
+  const paceEl = el('div', { class: 'stat-num', text: '1.0×' });
   const stamFill = el('div', { class: 'bar-fill stam' });
   const cargoFill = el('div', { class: 'bar-fill cargo' });
 
@@ -31,6 +32,7 @@ export function createHud(level) {
       el('div', { class: 'rh-stats' }, [
         el('div', { class: 'stat' }, [el('div', { class: 'stat-lbl', text: 'TIME' }), timeEl]),
         el('div', { class: 'stat' }, [el('div', { class: 'stat-lbl', text: 'SPEED' }), speedEl]),
+        el('div', { class: 'stat' }, [el('div', { class: 'stat-lbl', text: 'PACE' }), paceEl]),
       ]),
     ]),
     warn,
@@ -52,6 +54,10 @@ export function createHud(level) {
     sled.style.left = (s.progress * 100).toFixed(1) + '%';
     timeEl.textContent = s.time.toFixed(1) + 's';
     speedEl.textContent = Math.round(s.speedMph) + ' mph';
+    if (s.pace != null) {
+      paceEl.textContent = s.pace.toFixed(1) + '×';
+      paceEl.classList.toggle('hot', s.pace > 1.33);
+    }
     stamFill.style.width = (s.stamina * 100).toFixed(0) + '%';
     stamFill.classList.toggle('low', s.stamina < 0.18);
     cargoFill.style.width = (s.cargo * 100).toFixed(0) + '%';

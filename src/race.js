@@ -3,7 +3,7 @@
 // bridge. Forward is -Z; the world scrolls past a near-stationary sled rig.
 import * as THREE from 'three';
 import { input } from './input.js';
-import { clamp, damp, makeRng, rand } from './util.js';
+import { clamp, damp, lerp, makeRng, rand } from './util.js';
 import { createWorld, worldZ } from './world.js';
 import { createTeamRig } from './teamRig.js';
 import { createHud } from './hud.js';
@@ -83,44 +83,78 @@ export function createRaceScreen({ onFinish }) {
       scene.add(cb);
     }
 
-    // ---- Course layout ----------------------------------------------------
+    // ---- Course layout (procedural, escalating) ---------------------------
     obstacles = [];
-    const maxX = level.trailHalfWidth - 1.4;
-    const px = () => rand(rng, -maxX, maxX);
+    const maxX = level.trailHalfWidth - 1.4;            // usable lateral half-range
+    const riverDist = level.riverDist, riverDepth = level.riverDepth;
     const addOb = (dist, type, obj, half, x) => {
       obj.position.set(x, 0, -999); obj.visible = false; scene.add(obj);
       obstacles.push({ dist, type, obj, half, x, passed: false, chase: type === 'wolf' });
     };
-    const logSpots = [230, 360, 430, 560, 850, 930, 1255, 1330, 1405, 1505];
-    for (const d of logSpots) { const o = makeLog(rng); addOb(d, 'log', o, o.userData.halfWidth, px()); }
-    for (const d of [300, 500, 640, 1180, 1620]) {
-      const s = rand(rng, 0.8, 1.4); const o = makeRock(rng, s); addOb(d, 'rock', o, s, px());
+    const makeProp = (type) => {
+      if (type === 'rock') { const s = rand(rng, 0.8, 1.4); return { obj: makeRock(rng, s), half: s, type }; }
+      const o = makeLog(rng); return { obj: o, half: o.userData.halfWidth, type: 'log' };
+    };
+
+    // Set-piece bands the procedural generator must leave clean.
+    const moose1 = 700, moose2 = 1545, wolfAt = 1150;
+    const bands = [
+      [riverDist - 26, riverDist + riverDepth + 16],
+      [moose1 - 15, moose1 + 15], [moose2 - 15, moose2 + 15], [wolfAt - 22, wolfAt + 26],
+    ];
+    const inBand = (d) => bands.some(([lo, hi]) => d > lo && d < hi);
+
+    // Walk the trail: spacing shrinks and rows thicken with progress, so the
+    // run gets faster AND busier the deeper you go. A slowly-drifting "gap"
+    // guarantees at least one passable lane in every row.
+    let gapCenter = 0;
+    for (let d = level.clearStart; d < level.length - level.clearFinish; ) {
+      const p = clamp(d / level.length, 0, 1);
+      const spacing = lerp(level.startSpacing, level.endSpacing, p);
+      if (inBand(d)) { d += spacing; continue; }
+      const gapHalf = lerp(2.9, 2.1, p);                 // clear-lane half-width (shrinks)
+      const drift = Math.min(2.6, spacing * 0.16);
+      gapCenter = clamp(gapCenter + rand(rng, -drift, drift), -1.8, 1.8);
+      const twoUp = p > 0.2 && rng() < 0.06 + 0.5 * p;   // double-obstacle rows later on
+      if (twoUp) {
+        for (const side of [-1, 1]) {                    // small rocks flank the gap (always fit)
+          const it = makeProp('rock');
+          const x = clamp(gapCenter + side * (gapHalf + it.half), -(maxX - it.half), maxX - it.half);
+          addOb(d, it.type, it.obj, it.half, x);
+        }
+      } else {
+        const it = makeProp(rng() < 0.32 + 0.12 * p ? 'rock' : 'log');
+        const side = rng() < 0.5 ? -1 : 1;
+        const x = clamp(gapCenter + side * (gapHalf + it.half), -(maxX - it.half), maxX - it.half);
+        addOb(d, it.type, it.obj, it.half, x);
+      }
+      d += spacing;
     }
-    { const o = makeMoose(rng); addOb(700, 'moose', o, o.userData.halfWidth, rand(rng, -3, 3)); }
-    { const o = makeMoose(rng); addOb(1545, 'moose', o, o.userData.halfWidth, rand(rng, -3, 3)); }
-    // Wolf pack near 1150
-    for (let i = 0; i < 2; i++) { const o = makeWolf(rng); addOb(1150 + i * 8, 'wolf', o, o.userData.halfWidth, (i ? 1 : -1) * 3); }
+
+    // Set-pieces (preserved hazards): two moose and a wolf pack.
+    { const o = makeMoose(rng); addOb(moose1, 'moose', o, o.userData.halfWidth, rand(rng, -3, 3)); }
+    { const o = makeMoose(rng); addOb(moose2, 'moose', o, o.userData.halfWidth, rand(rng, -3, 3)); }
+    for (let i = 0; i < 2; i++) { const o = makeWolf(rng); addOb(wolfAt + i * 8, 'wolf', o, o.userData.halfWidth, (i ? 1 : -1) * 3); }
 
     // ---- River crossing ---------------------------------------------------
-    const riverDist = 1010, depth = 8;
     const safeHalf = 1.8 + avg.smarts * 0.06;
     const safeX = rand(rng, -maxX + safeHalf, maxX - safeHalf);
-    river = { dist: riverDist, depth, safeX, safeHalf, done: false, group: new THREE.Group() };
+    river = { dist: riverDist, depth: riverDepth, safeX, safeHalf, done: false, group: new THREE.Group() };
     const waterW = level.trailHalfWidth * 2 + 6;
     const water = new THREE.Mesh(
-      new THREE.PlaneGeometry(waterW, depth).rotateX(-Math.PI / 2),
+      new THREE.PlaneGeometry(waterW, riverDepth).rotateX(-Math.PI / 2),
       new THREE.MeshStandardMaterial({ color: 0x1f5d6b, roughness: 0.25, metalness: 0.3, transparent: true, opacity: 0.9 })
     );
     water.position.y = 0.01; river.group.add(water);
     river._water = water;
     const bridge = new THREE.Mesh(
-      new THREE.PlaneGeometry(safeHalf * 2, depth + 1.4).rotateX(-Math.PI / 2),
+      new THREE.PlaneGeometry(safeHalf * 2, riverDepth + 1.4).rotateX(-Math.PI / 2),
       new THREE.MeshStandardMaterial({ color: 0xdfeaff, roughness: 0.5, emissive: 0x223344, emissiveIntensity: 0.2 })
     );
     bridge.position.set(safeX, 0.06, 0); river.group.add(bridge);
     for (const s of [-1, 1]) {
-      const f = makeFlag(0x39c66d); f.position.set(safeX + s * safeHalf, 0, -depth / 2 - 0.3); river.group.add(f);
-      const f2 = makeFlag(0x39c66d); f2.position.set(safeX + s * safeHalf, 0, depth / 2 + 0.3); river.group.add(f2);
+      const f = makeFlag(0x39c66d); f.position.set(safeX + s * safeHalf, 0, -riverDepth / 2 - 0.3); river.group.add(f);
+      const f2 = makeFlag(0x39c66d); f2.position.set(safeX + s * safeHalf, 0, riverDepth / 2 + 0.3); river.group.add(f2);
     }
     river.group.position.z = -999; scene.add(river.group);
 
@@ -183,6 +217,9 @@ export function createRaceScreen({ onFinish }) {
     }
     const racing = st.started && !done;
     const P = st.perf;
+    const progress = clamp(st.travelled / level.length, 0, 1);
+    const pace = 1 + level.paceRamp * progress;        // sled gets progressively faster
+    const warnDistDyn = P.warnDist + st.speed * 1.1;   // keep ~constant reaction time as speed climbs
 
     // Steering
     st.steer = (input.right ? 1 : 0) - (input.left ? 1 : 0);
@@ -193,7 +230,7 @@ export function createRaceScreen({ onFinish }) {
     // Speed + stamina
     if (racing) {
       const boosting = input.boost && st.stamina > 0;
-      let target = P.topSpeed * (boosting ? 1.27 : 0.86);
+      let target = P.topSpeed * pace * (boosting ? 1.27 : 0.86);
       if (st.stamina < 15) target *= 0.62;
       st.speed = damp(st.speed, target, P.accelLambda, dt);
       st.stamina += (boosting ? -P.boostDrain : P.regen - P.baseDrain) * dt;
@@ -220,7 +257,7 @@ export function createRaceScreen({ onFinish }) {
       }
       if (racing && !o.passed) {
         const ahead = o.dist - st.travelled;
-        if (ahead > 0 && ahead < P.warnDist && ahead < warnNear) {
+        if (ahead > 0 && ahead < warnDistDyn && ahead < warnNear) {
           warnNear = ahead; warnMsg = warnLabel(o.type);
         }
       }
@@ -241,7 +278,7 @@ export function createRaceScreen({ onFinish }) {
             st.cargo -= 0.16; st.speed *= 0.45; st.hits++; shake = 0.7;
             hud.showToast('Cold water! 🥶  Serum soaked', 'bad');
           }
-        } else if (ahead < P.warnDist + 18 && ahead < warnNear) {
+        } else if (ahead < warnDistDyn + 18 && ahead < warnNear) {
           warnNear = ahead; warnMsg = '⚠ River crossing — aim between the green flags';
         }
       }
@@ -276,8 +313,7 @@ export function createRaceScreen({ onFinish }) {
 
     // HUD
     hud.set({
-      progress: clamp(st.travelled / level.length, 0, 1),
-      time: st.time, speedMph, topMph: st.topMph,
+      progress, time: st.time, speedMph, topMph: st.topMph, pace,
       stamina: clamp(st.stamina / P.staminaMax, 0, 1), cargo: st.cargo,
     });
     hud.tick(dt);

@@ -23,6 +23,10 @@ install. Just open it.
 3. **Race.** Auto-mush forward, steer to thread the obstacles, and deliver the serum to Nome with
    as much of it intact — and as fast — as you can. Three stars for a fast, clean, full-serum run.
 
+> **It escalates.** The trail gets **progressively faster and busier** the deeper you go — the
+> team's pace ramps up to ~1.5× by the finish (watch the **PACE** gauge) and obstacles thicken from
+> a sparse opening into a dense final push. A guaranteed clear lane always exists, but it tightens.
+
 ### Controls
 
 | Action | Keys | Touch |

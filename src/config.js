@@ -40,7 +40,8 @@ export const ELVIS = {
   isLead: true,
   coat: { id: 'elvis', name: 'Wooly White', main: 0xf3efe6, under: 0xffffff, mask: 0xefe7d8, earTip: 0xe9d8c0 },
   eye: { id: 'blue', name: 'Husky Blue', color: 0x6fb7e8 },
-  wooly: true, // extra fluff tufts
+  wooly: true,      // extra fluff tufts
+  snowNose: true,   // pink-speckled "snow nose"
   stats: { speed: 22, acceleration: 20, endurance: 18, leadership: 28, smarts: 12 },
 };
 
@@ -55,7 +56,16 @@ export const LEVEL1 = {
   to: 'Nome',
   cargo: 'Diphtheria Serum',
   length: 1850,         // course length in metres
-  trailHalfWidth: 9,    // how far left/right the sled can range
+  trailHalfWidth: 7,    // how far left/right the sled can range
   par: 150,             // par time in seconds (for scoring)
   seed: 20250125,
+
+  // --- Progressive difficulty (escalates from start p=0 to finish p=1) -----
+  paceRamp: 0.55,       // top speed grows up to 1 + paceRamp (1.55x) by the finish
+  startSpacing: 84,     // metres between obstacle rows at the start (sparse)
+  endSpacing: 24,       // metres between rows near the finish (dense)
+  clearStart: 175,      // calm runway before the first hazard
+  clearFinish: 70,      // clear approach to the finish line
+  riverDist: 1010,      // river crossing set-piece
+  riverDepth: 8,
 };
