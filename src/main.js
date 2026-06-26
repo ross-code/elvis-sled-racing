@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { el } from './util.js';
 import { createTitleScreen, createDraftScreen } from './screens.js';
 import { createRaceScreen } from './race.js';
+import { LEVELS } from './config.js';
 
 const canvas = document.getElementById('c');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
@@ -47,28 +48,42 @@ function showResult(r) {
     else stars = 1;
   }
   const starRow = r.win ? '★★★'.slice(0, stars).padEnd(3, '☆') : '☆☆☆';
+  const idx = r.levelIndex ?? 0;
+  const hasNext = idx + 1 < LEVELS.length;
+  const nextLevel = hasNext ? LEVELS[idx + 1] : null;
 
   resultBody.innerHTML = '';
-  resultBody.appendChild(el('div', { class: 'tag', text: r.level.name + ' · ' + r.level.from + ' → ' + r.level.to }));
-  resultBody.appendChild(el('h1', { class: 'result-title ' + (r.win ? 'win' : 'lose'), text: r.win ? 'Serum Delivered!' : 'Run Failed' }));
+  resultBody.appendChild(el('div', { class: 'tag', text: 'Leg ' + r.level.id + ' · ' + r.level.name + ' · ' + r.level.from + ' → ' + r.level.to }));
+  resultBody.appendChild(el('h1', {
+    class: 'result-title ' + (r.win ? 'win' : 'lose'),
+    text: r.win ? (hasNext ? 'Leg Complete!' : 'Journey Complete! 🏆') : 'Run Failed',
+  }));
   resultBody.appendChild(el('div', { class: 'result-stars', text: starRow }));
   resultBody.appendChild(el('p', {
     class: 'result-flavor',
     text: r.win
-      ? 'Elvis and the team brought the serum into Nome. The town is saved.'
-      : 'The serum didn’t survive the trail. Re-balance the team and try again.',
+      ? (hasNext
+        ? `${r.level.to} reached. The next leg climbs toward ${nextLevel.to} — ${nextLevel.name}.`
+        : 'Elvis and the team carried the cargo the whole way. The North is conquered.')
+      : 'The cargo didn’t survive the trail. Re-balance the team, or retry the leg.',
   }));
   resultBody.appendChild(el('div', { class: 'result-stats' }, [
     stat('Time', r.time.toFixed(1) + 's'),
     stat('Top speed', Math.round(r.topMph) + ' mph'),
     stat('Hits taken', String(r.hits)),
-    stat('Serum left', cargoPct + '%'),
+    stat('Cargo left', cargoPct + '%'),
   ]));
-  resultBody.appendChild(el('div', { class: 'result-btns' }, [
-    el('button', { class: 'btn', text: r.win ? 'Race Again' : 'Retry', onclick: () => { hideResult(); setScreen(race, lastTeam); } }),
-    el('button', { class: 'btn btn-ghost', text: 'Re-draft Team', onclick: () => { hideResult(); setScreen(draft); } }),
-  ]));
-  if (r.win) resultBody.appendChild(el('div', { class: 'next-note', text: 'More legs of the trail are coming — this is Level 1 of the journey.' }));
+
+  const btns = [];
+  if (r.win && hasNext) {
+    btns.push(el('button', { class: 'btn', text: 'Next Leg  ▶', onclick: () => { hideResult(); setScreen(race, lastTeam, idx + 1); } }));
+    btns.push(el('button', { class: 'btn btn-ghost', text: 'Replay Leg', onclick: () => { hideResult(); setScreen(race, lastTeam, idx); } }));
+  } else {
+    btns.push(el('button', { class: 'btn', text: r.win ? 'Play Again' : 'Retry Leg', onclick: () => { hideResult(); setScreen(race, lastTeam, r.win ? 0 : idx); } }));
+    btns.push(el('button', { class: 'btn btn-ghost', text: 'Re-draft Team', onclick: () => { hideResult(); setScreen(draft); } }));
+  }
+  resultBody.appendChild(el('div', { class: 'result-btns' }, btns));
+  if (r.win && hasNext) resultBody.appendChild(el('div', { class: 'next-note', text: 'Your team carries over. Leg ' + (idx + 2) + ' of ' + LEVELS.length + '.' }));
   resultOverlay.classList.remove('hidden');
 }
 function hideResult() { resultOverlay.classList.add('hidden'); }
@@ -78,7 +93,7 @@ function stat(label, value) {
 
 // ---- Screens ---------------------------------------------------------------
 const title = createTitleScreen({ onStart: () => setScreen(draft) });
-const draft = createDraftScreen({ onRace: (team) => { lastTeam = team; setScreen(race, team); } });
+const draft = createDraftScreen({ onRace: (team) => { lastTeam = team; setScreen(race, team, 0); } });
 const race = createRaceScreen({ onFinish: (r) => showResult(r) });
 
 setScreen(title);

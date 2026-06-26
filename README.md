@@ -1,10 +1,10 @@
 # 🛷 Elvis: Snow Run — Sled Dog Racing
 
 A 3D sled-dog **racing / adventure** game starring **Elvis**, the small wooly pure-white
-Siberian husky with bright blue eyes. Draft a team of huskies, harness up, and race a leg of
-the legendary **1925 serum run** — delivering medicine from **Nenana toward Nome** across the
-Alaskan night while you dodge fallen trees, ford an icy river at the right spot, and outrun a
-wolf pack.
+Siberian husky with bright blue eyes. Draft a team of huskies, harness up, and race the
+legendary **1925 serum run** across **three escalating legs** — the trail bends and climbs,
+cuts through **canyons with steep valley walls on either side**, and gets faster and busier the
+deeper you go. Dodge fallen trees, ford icy rivers at the right spot, and outrun the wolves.
 
 Built with [Three.js](https://threejs.org/) — runs entirely in the browser, no build step, no
 install. Just open it.
@@ -23,9 +23,23 @@ install. Just open it.
 3. **Race.** Auto-mush forward, steer to thread the obstacles, and deliver the serum to Nome with
    as much of it intact — and as fast — as you can. Three stars for a fast, clean, full-serum run.
 
-> **It escalates.** The trail gets **progressively faster and busier** the deeper you go — the
-> team's pace ramps up to ~1.5× by the finish (watch the **PACE** gauge) and obstacles thicken from
-> a sparse opening into a dense final push. A guaranteed clear lane always exists, but it tightens.
+> **It escalates.** Within each leg the trail gets **progressively faster and busier** — the
+> team's pace ramps up (watch the **PACE** gauge) and obstacles thicken from a sparse opening into a
+> dense final push. A guaranteed clear lane always exists, but it tightens.
+
+### The journey — three legs
+
+Win a leg and your team carries over to the next, harder one:
+
+| Leg | Route | Terrain | Weather |
+|---|---|---|---|
+| 1 · The Serum Run | Nenana → Nome | Gentle sweeping bends, a river crossing | Aurora night |
+| 2 · Rainy Pass | Rohn → Nikolai | S-curves, a climb, a **gorge** with towering rock walls | Dawn alpenglow |
+| 3 · The Gorge | Shaktoolik → Koyuk | Sharp chicanes, a **ridge** with valleys falling away both sides, a deep gorge | Blizzard night |
+
+The track turns, climbs and threads canyons via a "course path" transform — gameplay stays in
+trail-relative lanes (so dodging is always fair) while the world bends and the camera banks into
+the turns.
 
 ### Controls
 
@@ -87,25 +101,28 @@ ES modules need to be served over HTTP.)
 index.html          # shell + Three.js importmap (via unpkg CDN)
 css/style.css       # all UI (title, draft, HUD, results)
 src/
-  main.js           # bootstrap + screen manager + results
+  main.js           # bootstrap + screen manager + results + leg progression
   screens.js        # title screen + team-draft screen (rotating husky showcase)
-  race.js           # Level 1 "The Serum Run": physics, obstacles, river, win/lose
-  world.js          # aurora sky, snow, mountains, scrolling pines & trail markers
+  race.js           # a race leg: physics, obstacles, river, camera, win/lose
+  path.js           # the course path: bends, elevation, headings, canyon zones
+  track.js          # segmented terrain that follows the path (trail, gorge walls, ridges)
+  world.js          # themed atmosphere: sky, aurora/sun/moon, stars, mountains, snow
   husky.js          # the procedural Siberian husky (matched to Elvis) + run gait
   teamRig.js        # sled + musher + gangline + dog team formation
   props.js          # low-poly winter props (logs, rocks, moose, wolves, cabins…)
   hud.js            # in-race heads-up display
   input.js          # keyboard + touch
-  config.js         # stats, coat/eye palettes, Elvis spec, Level 1 data
+  config.js         # stats, coat/eye palettes, Elvis spec, THEMES + LEVELS
   util.js           # seeded RNG + helpers
 assets/reference/   # drop the real Elvis photos here (see ELVIS.md)
 ```
 
 ## Roadmap
 
-Level 1 is the start. Planned next legs: more serum-run stages (Shaktoolik, Golovin), blizzards
-and whiteout visibility, overflow ice, a day/dusk cycle, ranked time trials, and per-dog
-fatigue. The course generator and stat system are already built to extend.
+Three legs ship today (turning tracks, gorges/ridges, biome themes, escalating pace & density).
+Adding a new leg is just another entry in `LEVELS` (route, `curve`, `canyons`, `theme`) in
+[config.js](src/config.js). Planned next: overflow-ice hazards, whiteout visibility spikes,
+avalanches in the gorge, ranked time trials, and per-dog fatigue across the journey.
 
 ## Credits
 

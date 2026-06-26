@@ -5,7 +5,7 @@ import { el } from './util.js';
 import { makeRng } from './util.js';
 import { createWorld } from './world.js';
 import { createHusky } from './husky.js';
-import { COATS, EYES, STATS, STAT_BUDGET, STAT_MIN, STAT_MAX, MAX_TEAMMATES, ELVIS } from './config.js';
+import { COATS, EYES, STATS, STAT_BUDGET, STAT_MIN, STAT_MAX, MAX_TEAMMATES, ELVIS, THEMES } from './config.js';
 
 // ---- Shared 3D showcase ----------------------------------------------------
 function createShowcase(seed) {
@@ -28,7 +28,7 @@ function createShowcase(seed) {
   scene.add(key, key.target);
   const rim = new THREE.DirectionalLight(0x66a6ff, 0.7); rim.position.set(6, 4, -6); scene.add(rim);
 
-  const world = createWorld(rng, { scroll: false, trailHalfWidth: 6 });
+  const world = createWorld(rng, { theme: THEMES['aurora-night'], scroll: false, ground: true });
   scene.add(world.group);
 
   const ped = new THREE.Mesh(
